@@ -37,15 +37,18 @@ local function WriteSWCSDeathNotice(Attacker, Weapon, Victim, Flags)
 
 			if not BulletTrace.Hit then continue end
 
+			local HitEntity = BulletTrace.Entity
+			local HitClass = (HitEntity and IsValid(HitEntity)) and HitEntity:GetClass() or nil
+
 			--- @diagnostic disable-next-line: undefined-global
-			if swcs.IsLineBlockedBySmoke(BulletTrace.StartPos, BulletTrace.HitPos, 1) --[[and BulletTrace.Entity == Victim]] then -- From SWCS
+			if swcs.IsLineBlockedBySmoke(BulletTrace.StartPos, BulletTrace.HitPos, 1) --[[and HitEntity == Victim]] then -- From SWCS
 				ThroughSmoke = true
 			end
 
-			if BulletTrace.Entity == Victim then continue end
+			if HitEntity == Victim then continue end
 
 			-- TODO: This is kind of lazy
-			if BulletTrace.HitWorld or bit.band(BulletTrace.Contents, CONTENTS_SOLID) == CONTENTS_SOLID then
+			if BulletTrace.HitWorld or --[[bit.band(BulletTrace.Contents, CONTENTS_SOLID) == CONTENTS_SOLID]] HitClass == "prop_physics" or HitClass == "prop_dynamic" then
 				WallBang = true
 				break
 			end
