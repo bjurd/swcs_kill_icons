@@ -158,7 +158,7 @@ hook.Add("PostGamemodeLoaded", "swcs_kill_icons", function()
 		local Time = hud_deathnotice_time:GetFloat()
 		local Reset = Deaths[1] ~= nil
 
-		x = x * ScrW()
+		x = --[[x]] 0.95 * ScrW()
 		y = y * ScrH()
 
 		local Count = #Deaths
