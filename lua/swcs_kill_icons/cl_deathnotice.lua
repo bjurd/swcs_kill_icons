@@ -7,6 +7,7 @@ local DeathDrawType = {
 --- @class DeathNoticeDraw
 --- @field Type DeathDrawType
 --- @field Data string
+--- @field Color Color|nil
 
 local hud_deathnotice_time = nil
 local cl_drawhud = nil
@@ -65,7 +66,8 @@ local function DrawDeathNotice(x, y, Death, Time)
 	if Death.left then
 		Order[#Order + 1] = {
 			Type = DeathDrawType.STRING,
-			Data = Death.left
+			Data = Death.left,
+			Color = Death.color1
 		}
 	end
 
@@ -104,7 +106,8 @@ local function DrawDeathNotice(x, y, Death, Time)
 
 	Order[#Order + 1] = {
 		Type = DeathDrawType.STRING,
-		Data = Death.right
+		Data = Death.right,
+		Color = Death.color2
 	}
 
 	local DrawWidth, DrawHeight = GetDeathDrawSize(Order)
@@ -118,7 +121,7 @@ local function DrawDeathNotice(x, y, Death, Time)
 			local TWidth, THeight = surface.GetTextSize(DeathDraw.Data)
 
 			surface.SetAlphaMultiplier(Fade)
-				surface.SetTextColor(255, 255, 255, 255) -- TODO: color1, color2
+				surface.SetTextColor(DeathDraw.Color or color_white)
 				surface.SetTextPos(x, y + ((Height * 0.5) - (THeight * 0.5)))
 				surface.DrawText(DeathDraw.Data)
 			surface.SetAlphaMultiplier(1)
