@@ -4,14 +4,17 @@
 --- @class Weapon
 --- @field IsSWCSWeapon boolean|nil
 
+--- @class SWCSWeapon : Weapon
+--- @field GetIsScoped boolean
+
 --- @param Attacker Player
---- @param Weapon Weapon
+--- @param Weapon SWCSWeapon
 --- @param Victim Entity|string
 --- @param Flags number
 local function WriteSWCSDeathNotice(Attacker, Weapon, Victim, Flags)
 	local Flashbanged = Attacker:SWCS_IsFlashBangActive()
 	local HeadShot = false
-	local NoScope = false
+	local NoScope = not Weapon:GetIsScoped()
 	local ThroughSmoke = false
 	local WallBang = false
 
@@ -89,6 +92,7 @@ hook.Add("PostGamemodeLoaded", "swcs_kill_icons", function()
 				local Weapon = Attacker:GetActiveWeapon()
 
 				if Weapon:IsValid() and Weapon.IsSWCSWeapon then
+					--- @cast Weapon SWCSWeapon
 					WriteSWCSDeathNotice(Attacker, Weapon, Victim, Flags)
 					return
 				end

@@ -74,6 +74,13 @@ local function DrawDeathNotice(x, y, Death, Time)
 		Data = Death.icon
 	}
 
+	if bit.band(Flags, DEATH_NOTICE_NO_SCOPE) == DEATH_NOTICE_NO_SCOPE then
+		Order[#Order + 1] = {
+			Type = DeathDrawType.ICON,
+			Data = "swcs_no_scope"
+		}
+	end
+
 	if bit.band(Flags, DEATH_NOTICE_THROUGH_SMOKE) == DEATH_NOTICE_THROUGH_SMOKE then
 		Order[#Order + 1] = {
 			Type = DeathDrawType.ICON,
