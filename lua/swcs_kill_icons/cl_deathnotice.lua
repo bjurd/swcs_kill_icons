@@ -69,13 +69,6 @@ local function DrawDeathNotice(x, y, Death, Time)
 		}
 	end
 
-	if bit.band(Flags, DEATH_NOTICE_HEAD_SHOT) == DEATH_NOTICE_HEAD_SHOT then
-		Order[#Order + 1] = {
-			Type = DeathDrawType.ICON,
-			Data = "swcs_head_shot"
-		}
-	end
-
 	Order[#Order + 1] = {
 		Type = DeathDrawType.ICON,
 		Data = Death.icon
@@ -92,6 +85,13 @@ local function DrawDeathNotice(x, y, Death, Time)
 		Order[#Order + 1] = {
 			Type = DeathDrawType.ICON,
 			Data = "swcs_wall_bang"
+		}
+	end
+
+	if bit.band(Flags, DEATH_NOTICE_HEAD_SHOT) == DEATH_NOTICE_HEAD_SHOT then
+		Order[#Order + 1] = {
+			Type = DeathDrawType.ICON,
+			Data = "swcs_head_shot"
 		}
 	end
 
