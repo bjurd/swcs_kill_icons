@@ -24,6 +24,7 @@ if SERVER then
 	AddCSLuaFile("swcs_kill_icons/cl_icons.lua")
 	AddCSLuaFile("swcs_kill_icons/cl_deathnotice.lua")
 
+	include("swcs_kill_icons/sv_bullet_track.lua")
 	include("swcs_kill_icons/sv_deathnotice.lua")
 elseif CLIENT then
 	include("swcs_kill_icons/cl_icons.lua")

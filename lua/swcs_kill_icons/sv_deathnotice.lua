@@ -23,6 +23,25 @@ local function WriteSWCSDeathNotice(Attacker, Weapon, Victim, Flags)
 		end
 	end
 
+	local LastFiredBullets = Attacker.m_pLastFiredBullets
+	if LastFiredBullets then
+		local Count = #LastFiredBullets
+
+		for i = 1, Count do
+			local Bullet = LastFiredBullets[i]
+			local BulletTrace = Bullet.Trace
+
+			if not BulletTrace.Hit then continue end
+			if BulletTrace.Entity == Victim then continue end
+
+			-- TODO: This is kind of lazy
+			if BulletTrace.HitWorld or bit.band(BulletTrace.Contents, CONTENTS_SOLID) == CONTENTS_SOLID then
+				WallBang = true
+				break
+			end
+		end
+	end
+
 	-- TODO: Maybe writing a second Flags bit for addon compatibility would be wise
 	if Flashbanged then Flags = bit.bor(Flags, DEATH_NOTICE_FLASHBANGED) end
 	if HeadShot then Flags = bit.bor(Flags, DEATH_NOTICE_HEAD_SHOT) end
