@@ -32,6 +32,12 @@ local function WriteSWCSDeathNotice(Attacker, Weapon, Victim, Flags)
 			local BulletTrace = Bullet.Trace
 
 			if not BulletTrace.Hit then continue end
+
+			--- @diagnostic disable-next-line: undefined-global
+			if swcs.IsLineBlockedBySmoke(BulletTrace.StartPos, BulletTrace.HitPos, 1) --[[and BulletTrace.Entity == Victim]] then -- From SWCS
+				ThroughSmoke = true
+			end
+
 			if BulletTrace.Entity == Victim then continue end
 
 			-- TODO: This is kind of lazy
