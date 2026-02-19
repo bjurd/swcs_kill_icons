@@ -1,12 +1,42 @@
+--- @enum DeathDrawType
+local DeathDrawType = {
+	STRING = 1,
+	ICON = 2
+}
+
 --- @class DeathNoticeDraw
---- @field Renderer function
---- @field Arguments any[]
+--- @field Type DeathDrawType
+--- @field Data string
 
 local hud_deathnotice_time = nil
 local cl_drawhud = nil
 
-local _, KillIcons = debug.getupvalue(killicon.Add, 1)
---- @cast KillIcons table<string, KillIcon>
+--- @param DeathDraws DeathNoticeDraw[]
+--- @return number, number
+local function GetDeathDrawSize(DeathDraws)
+	local Width = 0
+	local Height = 0
+
+	for i = 1, #DeathDraws do
+		local DeathDraw = DeathDraws[i]
+
+		if DeathDraw.Type == DeathDrawType.STRING then
+			surface.SetFont("ChatFont")
+			local TWidth, THeight = surface.GetTextSize(DeathDraw.Data)
+
+			Width = Width + TWidth + 16
+		elseif DeathDraw.Type == DeathDrawType.ICON then
+			local IWidth, IHeight = killicon.GetSize(DeathDraw.Data)
+
+			Width = Width + IWidth + 16
+			Height = math.max(Height, IHeight)
+		end
+	end
+
+	Width = Width - 16
+
+	return Width, Height
+end
 
 --- @param x number
 --- @param y number
@@ -20,49 +50,72 @@ local function DrawDeathNotice(x, y, Death, Time)
 	local Fade = (Death.time + Time) - CurTime()
 
 	local Alpha = math.Clamp(Fade * 255, 0, 255)
-	Death.color1.a = Alpha
-	Death.color2.a = Alpha
 
 	local Flags = Death.flags
 	--- @type DeathNoticeDraw[]
 	local Order = {}
 
 	if bit.band(Flags, DEATH_NOTICE_FLASHBANGED) == DEATH_NOTICE_FLASHBANGED then
-		local Offset = killicon.GetSize(Death.icon)
-
-		if Death.left then
-			surface.SetFont("ChatFont")
-			local LWidth, LHeight = surface.GetTextSize(Death.left)
-
-			Offset = Offset + LWidth
-		end
-
-		table.insert(Order, {
-			Renderer = killicon.Render,
-			Arguments = { x - (Width * 0.5) - Offset, y, "swcs_flashbanged", Alpha }
-		})
+		Order[#Order + 1] = {
+			Type = DeathDrawType.ICON,
+			Data = "swcs_flashbanged"
+		}
 	end
-
-	table.insert(Order, {
-		Renderer = killicon.Render,
-		Arguments = { x - (Width * 0.5), y, Death.icon, Alpha }
-	})
 
 	if Death.left then
-		table.insert(Order, {
-			Renderer = draw.SimpleText,
-			Arguments = { Death.left, "ChatFont", x - (Width / 2) - 16, y + Height / 2, Death.color1, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER }
-		})
+		Order[#Order + 1] = {
+			Type = DeathDrawType.STRING,
+			Data = Death.left
+		}
 	end
 
-	table.insert(Order, {
-		Renderer = draw.SimpleText,
-		Arguments = { Death.right, "ChatFont", x + (Width / 2) + 16, y + Height / 2, Death.color2, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER }
-	})
+	if bit.band(Flags, DEATH_NOTICE_HEAD_SHOT) == DEATH_NOTICE_HEAD_SHOT then
+		Order[#Order + 1] = {
+			Type = DeathDrawType.ICON,
+			Data = "swcs_head_shot"
+		}
+	end
+
+	Order[#Order + 1] = {
+		Type = DeathDrawType.ICON,
+		Data = Death.icon
+	}
+
+	if bit.band(Flags, DEATH_NOTICE_WALL_BANG) == DEATH_NOTICE_WALL_BANG then
+		Order[#Order + 1] = {
+			Type = DeathDrawType.ICON,
+			Data = "swcs_wall_bang"
+		}
+	end
+
+	Order[#Order + 1] = {
+		Type = DeathDrawType.STRING,
+		Data = Death.right
+	}
+
+	local DrawWidth, DrawHeight = GetDeathDrawSize(Order)
+	x = x - DrawWidth
 
 	for i = 1, #Order do
-		local DeathNoticeDraw = Order[i]
-		DeathNoticeDraw.Renderer(unpack(DeathNoticeDraw.Arguments))
+		local DeathDraw = Order[i]
+
+		if DeathDraw.Type == DeathDrawType.STRING then
+			surface.SetFont("ChatFont")
+			local TWidth, THeight = surface.GetTextSize(DeathDraw.Data)
+
+			surface.SetAlphaMultiplier(Fade)
+				surface.SetTextColor(255, 255, 255, 255) -- TODO: color1, color2
+				surface.SetTextPos(x, y + ((Height * 0.5) - (THeight * 0.5)))
+				surface.DrawText(DeathDraw.Data)
+			surface.SetAlphaMultiplier(1)
+
+			x = x + TWidth + 16
+		elseif DeathDraw.Type == DeathDrawType.ICON then
+			local IWidth, IHeight = killicon.GetSize(DeathDraw.Data)
+			killicon.Render(x, y, DeathDraw.Data, Alpha)
+
+			x = x + IWidth + 16
+		end
 	end
 
 	return math.ceil(y + Height * 0.75)
