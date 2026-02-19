@@ -5,7 +5,8 @@
 --- @field IsSWCSWeapon boolean|nil
 
 --- @class SWCSWeapon : Weapon
---- @field GetIsScoped boolean
+--- @field GetIsScoped fun(self: SWCSWeapon) : boolean
+--- @field GetWeaponType fun(self: SWCSWeapon): string
 
 --- @param Attacker Player
 --- @param Weapon SWCSWeapon
@@ -14,7 +15,7 @@
 local function WriteSWCSDeathNotice(Attacker, Weapon, Victim, Flags)
 	local Flashbanged = Attacker:SWCS_IsFlashBangActive()
 	local HeadShot = false
-	local NoScope = not Weapon:GetIsScoped()
+	local NoScope = Weapon:GetWeaponType() == "sniperrifle" and not Weapon:GetIsScoped()
 	local ThroughSmoke = false
 	local WallBang = false
 
