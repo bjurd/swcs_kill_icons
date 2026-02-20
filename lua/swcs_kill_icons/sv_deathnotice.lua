@@ -94,7 +94,7 @@ local function WriteSWCSDeathNotice(Attacker, Weapon, Victim, Flags)
 			--- @cast Victim string
 			net.WriteUInt(1, 2)
 			net.WriteString(Victim)
-		elseif Victim:IsValid() then
+		elseif IsValid(Victim) then
 			--- @cast Victim Entity
 			net.WriteUInt(2, 2)
 			net.WriteEntity(Victim)
