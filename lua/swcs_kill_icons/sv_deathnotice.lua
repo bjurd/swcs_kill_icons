@@ -77,12 +77,16 @@ local function WriteSWCSDeathNotice(Attacker, Weapon, Victim, Flags)
 
 	-- TODO: Maybe writing a second Flags bit for addon compatibility would be wise
 	local IsZeus = Weapon:GetClass() == "weapon_swcs_taser"
+	local IsKnife = Weapon:GetWeaponType() == "knife"
 
 	if Flashbanged then Flags = bit.bor(Flags, DEATH_NOTICE_FLASHBANGED) end
-	if not IsZeus and HeadShot then Flags = bit.bor(Flags, DEATH_NOTICE_HEAD_SHOT) end
-	if NoScope then Flags = bit.bor(Flags, DEATH_NOTICE_NO_SCOPE) end
-	if not IsZeus and ThroughSmoke then Flags = bit.bor(Flags, DEATH_NOTICE_THROUGH_SMOKE) end
-	if WallBang then Flags = bit.bor(Flags, DEATH_NOTICE_WALL_BANG) end
+
+	if not IsKnife then
+		if not IsZeus and HeadShot then Flags = bit.bor(Flags, DEATH_NOTICE_HEAD_SHOT) end
+		if NoScope then Flags = bit.bor(Flags, DEATH_NOTICE_NO_SCOPE) end
+		if not IsZeus and ThroughSmoke then Flags = bit.bor(Flags, DEATH_NOTICE_THROUGH_SMOKE) end
+		if WallBang then Flags = bit.bor(Flags, DEATH_NOTICE_WALL_BANG) end
+	end
 
 	net.Start("DeathNoticeEvent")
 		net.WriteUInt(2, 2)
