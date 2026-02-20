@@ -19,13 +19,18 @@ local function WriteSWCSDeathNotice(Attacker, Weapon, Victim, Flags)
 	local ThroughSmoke = false
 	local WallBang = false
 
-	if isentity(Victim) then
+	local VictimIsEntity = isentity(Victim)
+
+	if VictimIsEntity then
 		--- @cast Victim Entity
 		if Victim:IsPlayer() then
 			--- @cast Victim Player
 			HeadShot = Victim:LastHitGroup() == HITGROUP_HEAD
 		end
+		--- @cast Victim Entity
 	end
+
+	local GAMEMODE = gmod.GetGamemode()
 
 	local LastFiredBullets = Attacker.m_pLastFiredBullets
 	if LastFiredBullets then
@@ -39,15 +44,30 @@ local function WriteSWCSDeathNotice(Attacker, Weapon, Victim, Flags)
 
 			local HitEntity = BulletTrace.Entity
 			local HitClass = (HitEntity and IsValid(HitEntity)) and HitEntity:GetClass() or nil
+			local HitVictim = false
+
+			if VictimIsEntity then
+				HitVictim = HitEntity == Victim
+			else
+				--- @cast Victim string
+				--- @diagnostic disable-next-line: param-type-mismatch, need-check-nil
+				HitVictim = GAMEMODE:GetDeathNoticeEntityName(HitEntity) == Victim -- They really should have made this always pass in an entity, also the LuaLS definition for this function is fucked up
+			end
 
 			--- @diagnostic disable-next-line: undefined-global
 			if swcs.IsLineBlockedBySmoke(BulletTrace.StartPos, BulletTrace.HitPos, 1) --[[and HitEntity == Victim]] then -- From SWCS
 				ThroughSmoke = true
 			end
 
-			if HitEntity == Victim then continue end
+			if HitVictim then
+				if not HeadShot and BulletTrace.HitGroup == HITGROUP_HEAD then
+					HeadShot = true
+				end
 
-			-- TODO: This is kind of lazy
+				continue
+			end
+
+			-- TODO: This is kind of lazy, and doesn't work for NPCs
 			if BulletTrace.HitWorld or --[[bit.band(BulletTrace.Contents, CONTENTS_SOLID) == CONTENTS_SOLID]] HitClass == "prop_physics" or HitClass == "prop_dynamic" then
 				WallBang = true
 				break
