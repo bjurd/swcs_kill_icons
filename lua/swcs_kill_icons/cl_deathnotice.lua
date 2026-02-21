@@ -55,7 +55,7 @@ local function DrawDeathNotice(x, y, Death, Time)
 
 	local Alpha = math.Clamp(Fade * 255, 0, 255)
 
-	local Flags = Death.flags
+	local Flags = Death.flags or 0
 	--- @type DeathNoticeDraw[]
 	local Order = {}
 
