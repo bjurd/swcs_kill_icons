@@ -60,6 +60,7 @@ local function WriteSWCSDeathNotice(Attacker, Weapon, Victim, Flags)
 			end
 
 			if HitVictim then
+				-- TODO: This does not work for NPCs when they get wallbanged
 				if not HeadShot and BulletTrace.HitGroup == HITGROUP_HEAD then
 					HeadShot = true
 				end
@@ -67,8 +68,8 @@ local function WriteSWCSDeathNotice(Attacker, Weapon, Victim, Flags)
 				continue
 			end
 
-			-- TODO: This is kind of lazy, and doesn't work for NPCs
-			if BulletTrace.HitWorld or --[[bit.band(BulletTrace.Contents, CONTENTS_SOLID) == CONTENTS_SOLID]] HitClass == "prop_physics" or HitClass == "prop_dynamic" then
+			-- TODO: This is kind of lazy
+			if BulletTrace.HitWorld or bit.band(BulletTrace.Contents, CONTENTS_SOLID) == CONTENTS_SOLID then
 				WallBang = true
 				break
 			end
