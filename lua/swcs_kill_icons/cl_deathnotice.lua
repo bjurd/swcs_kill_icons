@@ -66,7 +66,7 @@ local function DrawDeathNotice(x, y, Death, Time)
 		}
 	end
 
-	if Death.left then
+	if isstring(Death.left) then
 		Order[#Order + 1] = {
 			Type = DeathDrawType.STRING,
 			Data = Death.left,
@@ -74,10 +74,12 @@ local function DrawDeathNotice(x, y, Death, Time)
 		}
 	end
 
-	Order[#Order + 1] = {
-		Type = DeathDrawType.ICON,
-		Data = Death.icon
-	}
+	if isstring(Death.icon) then
+		Order[#Order + 1] = {
+			Type = DeathDrawType.ICON,
+			Data = Death.icon
+		}
+	end
 
 	if bit.band(Flags, DEATH_NOTICE_NO_SCOPE) == DEATH_NOTICE_NO_SCOPE then
 		Order[#Order + 1] = {
@@ -107,11 +109,13 @@ local function DrawDeathNotice(x, y, Death, Time)
 		}
 	end
 
-	Order[#Order + 1] = {
-		Type = DeathDrawType.STRING,
-		Data = Death.right,
-		Color = Death.color2
-	}
+	if isstring(Death.right) then
+		Order[#Order + 1] = {
+			Type = DeathDrawType.STRING,
+			Data = Death.right,
+			Color = Death.color2
+		}
+	end
 
 	local DrawWidth, DrawHeight = GetDeathDrawSize(Order)
 	x = x - DrawWidth
