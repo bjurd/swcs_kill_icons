@@ -120,7 +120,7 @@ hook.Add("PostGamemodeLoaded", "swcs_kill_icons", function()
 				--- @cast Attacker Player
 				local Weapon = Attacker:GetActiveWeapon()
 
-				if Weapon:IsValid() and Weapon.IsSWCSWeapon then
+				if Weapon:IsValid() and Weapon.IsSWCSWeapon and Weapon:GetClass() == Inflictor then
 					--- @cast Weapon SWCSWeapon
 					WriteSWCSDeathNotice(Attacker, Weapon, Victim, Flags)
 					return
