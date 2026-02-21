@@ -18,6 +18,8 @@ local function GetDeathDrawSize(DeathDraws)
 	local Width = 0
 	local Height = 0
 
+	local FontHeight = draw.GetFontHeight("ChatFont")
+
 	for i = 1, #DeathDraws do
 		local DeathDraw = DeathDraws[i]
 
@@ -35,6 +37,7 @@ local function GetDeathDrawSize(DeathDraws)
 	end
 
 	Width = Width - 16
+	Height = math.max(Height, FontHeight)
 
 	return Width, Height
 end
