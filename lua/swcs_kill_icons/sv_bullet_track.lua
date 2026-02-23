@@ -19,10 +19,10 @@ hook.Add("SWCSBulletTraceDamage", "swcs_kill_icons", function(BulletTrace, Damag
 	local Inflictor = DamageInfo:GetInflictor() --[[@as Weapon]]
 	local Victim = BulletTrace.ent
 
-	if not Attacker:IsValid() or not Attacker:IsPlayer() then
+	if not Attacker:IsValid() or not (Attacker:IsPlayer() or Attacker:IsNPC()) then
 		return
 	end
-	--- @cast Attacker Player
+	--- @cast Attacker Player|NPC
 
 	if not Inflictor:IsValid() or not Inflictor:IsWeapon() or not Inflictor.IsSWCSWeapon then
 		-- This should never happen
@@ -49,8 +49,11 @@ hook.Add("SWCSBulletTraceDamage", "swcs_kill_icons", function(BulletTrace, Damag
 	local StoredTrace = table.Copy(BulletTrace) --[[@as SWCSStoredBulletTrace]]
 	local Trace = StoredTrace.trace
 
-	if Attacker:SWCS_IsFlashBangActive() then
-		AttackFlags = bit.bor(AttackFlags, DEATH_NOTICE_FLASHBANGED)
+	if Attacker:IsPlayer() then
+		--- @cast Attacker Player
+		if Attacker:SWCS_IsFlashBangActive() then
+			AttackFlags = bit.bor(AttackFlags, DEATH_NOTICE_FLASHBANGED)
+		end
 	end
 
 	if not IsZeus and Trace.HitGroup == HITGROUP_HEAD then
