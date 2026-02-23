@@ -13,79 +13,55 @@
 --- @param Victim Entity|string
 --- @param Flags number
 local function WriteSWCSDeathNotice(Attacker, Weapon, Victim, Flags)
-	local Flashbanged = Attacker:SWCS_IsFlashBangActive()
-	local HeadShot = false
-	local NoScope = Weapon:GetWeaponType() == "sniperrifle" and not Weapon:GetIsScoped()
-	local ThroughSmoke = false
-	local WallBang = false
+	if Attacker:SWCS_IsFlashBangActive() then
+		-- For things that don't fire bullets (knives)
+		Flags = bit.bor(Flags, DEATH_NOTICE_FLASHBANGED)
+	end
 
+	--- @type SWCSStoredBulletTrace
+	local AttackToUse = nil
 	local VictimIsEntity = isentity(Victim)
 
-	if VictimIsEntity then
-		--- @cast Victim Entity
-		if Victim:IsPlayer() then
-			--- @cast Victim Player
-			HeadShot = Victim:LastHitGroup() == HITGROUP_HEAD
-		end
-		--- @cast Victim Entity
-	end
+	local LastTracedAttacks = Attacker.m_pSWCSTracedAttacks
+	if istable(LastTracedAttacks) and Attacker.m_iSWCSLastFiredTick == engine.TickCount() then
+		--- @cast LastTracedAttacks SWCSStoredBulletTrace[]
 
-	local GAMEMODE = gmod.GetGamemode()
+		local GAMEMODE = gmod.GetGamemode()
 
-	local LastFiredBullets = Attacker.m_pLastFiredBullets
-	if LastFiredBullets and Attacker.m_iLastFiredTick == engine.TickCount() then
-		local Count = #LastFiredBullets
-
-		for i = 1, Count do
-			local Bullet = LastFiredBullets[i]
-			local BulletTrace = Bullet.Trace
-
-			if not BulletTrace.Hit then continue end
-
-			local HitEntity = BulletTrace.Entity
-			local HitClass = (HitEntity and IsValid(HitEntity)) and HitEntity:GetClass() or nil
-			local HitVictim = false
+		local Count = #LastTracedAttacks
+		for i = Count, 1, -1 do
+			local Attack = LastTracedAttacks[i]
 
 			if VictimIsEntity then
-				HitVictim = HitEntity == Victim
-			else
-				--- @cast Victim string
-				--- @diagnostic disable-next-line: param-type-mismatch, need-check-nil
-				HitVictim = GAMEMODE:GetDeathNoticeEntityName(HitEntity) == Victim -- They really should have made this always pass in an entity, also the LuaLS definition for this function is fucked up
-			end
-
-			--- @diagnostic disable-next-line: undefined-global
-			if swcs.IsLineBlockedBySmoke(BulletTrace.StartPos, BulletTrace.HitPos, 1) --[[and HitEntity == Victim]] then -- From SWCS
-				ThroughSmoke = true
-			end
-
-			if HitVictim then
-				-- TODO: This does not work for NPCs when they get wallbanged
-				if not HeadShot and BulletTrace.HitGroup == HITGROUP_HEAD then
-					HeadShot = true
+				if Attack.ent == Victim then
+					-- TODO: This is bad if they take damage from multiple bullets in a tick
+					-- because it's difficult to know which one actually killed them
+					AttackToUse = Attack
+					break
 				end
+			else
+				local HitEntity = Attack.trace.Entity
 
-				continue
-			end
-
-			-- TODO: This is kind of lazy
-			if BulletTrace.HitWorld or bit.band(BulletTrace.Contents, CONTENTS_SOLID) == CONTENTS_SOLID then
-				WallBang = true
-				break
+				--- @diagnostic disable-next-line: param-type-mismatch
+				if GAMEMODE:GetDeathNoticeEntityName(HitEntity) == Victim then
+					-- TODO: This is also bad if they attack multiple of the same entity in a tick
+					AttackToUse = Attack
+					break
+				end
 			end
 		end
 	end
 
-	-- TODO: Maybe writing a second Flags bit for addon compatibility would be wise
-	local IsZeus = Weapon:GetClass() == "weapon_swcs_taser"
-	-- local IsKnife = Weapon:GetWeaponType() == "knife"
+	if AttackToUse then
+		Flags = bit.bor(Flags, AttackToUse.AttackFlags)
 
-	if Flashbanged then Flags = bit.bor(Flags, DEATH_NOTICE_FLASHBANGED) end
-
-	if not IsZeus and HeadShot then Flags = bit.bor(Flags, DEATH_NOTICE_HEAD_SHOT) end
-	if NoScope then Flags = bit.bor(Flags, DEATH_NOTICE_NO_SCOPE) end
-	if not IsZeus and ThroughSmoke then Flags = bit.bor(Flags, DEATH_NOTICE_THROUGH_SMOKE) end
-	if WallBang then Flags = bit.bor(Flags, DEATH_NOTICE_WALL_BANG) end
+		-- This is always valid if AttackToUse is valid
+		--- @cast LastTracedAttacks SWCSStoredBulletTrace[]
+		-- This is done so that if multiple things of the same class are killed, but differently, the feeds don't get duplicated
+		-- Which means that technically it's possible for the feeds to be backwards as the entities can be mistaken for each other,
+		-- but since all that's shown is their display name, it isn't possible to tell which is which and shouldn't be noticeable
+		table.RemoveByValue(LastTracedAttacks, AttackToUse)
+	end
 
 	net.Start("DeathNoticeEvent")
 		net.WriteUInt(2, 2)
